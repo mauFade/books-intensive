@@ -12,6 +12,12 @@ type BookHandler struct {
 	service *service.BookService
 }
 
+func NewBookHandler(s *service.BookService) *BookHandler {
+	return &BookHandler{
+		service: s,
+	}
+}
+
 func (h *BookHandler) GetBooks(w http.ResponseWriter, r *http.Request) {
 	books, err := h.service.GetBooks()
 
@@ -65,4 +71,47 @@ func (h *BookHandler) GetBookByID(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(book)
+}
+
+func (h *BookHandler) UpdateBook(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := strconv.Atoi(idStr)
+
+	if err != nil {
+		http.Error(w, "invalid book ID", http.StatusBadRequest)
+		return
+	}
+
+	var book service.Book
+	if err := json.NewDecoder(r.Body).Decode(&book); err != nil {
+		http.Error(w, "invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	book.ID = id
+
+	if err := h.service.UpdateBook(&book); err != nil {
+		http.Error(w, "failed to update book", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(book)
+}
+
+func (h *BookHandler) DeleteBook(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := strconv.Atoi(idStr)
+
+	if err != nil {
+		http.Error(w, "invalid book ID", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.service.DeleteBook(id); err != nil {
+		http.Error(w, "failed to delete book", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
