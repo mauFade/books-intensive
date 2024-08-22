@@ -2,10 +2,13 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/mauFade/books-intensive/internal/cli"
 	"github.com/mauFade/books-intensive/internal/service"
 	"github.com/mauFade/books-intensive/internal/web"
 )
@@ -22,6 +25,14 @@ func main() {
 	bookService := service.NewBookService(db)
 
 	bookHandlers := web.NewBookHandler(bookService)
+
+	fmt.Println(len(os.Args), os.Args, os.Args[1])
+
+	if len(os.Args) > 1 && (os.Args[1] == "simulate" || os.Args[1] == "search") {
+		bookCLI := cli.NewBookCLI(bookService)
+		bookCLI.Run()
+		return
+	}
 
 	router := http.NewServeMux()
 

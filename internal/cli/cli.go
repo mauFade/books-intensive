@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
+	"time"
 
 	"github.com/mauFade/books-intensive/internal/service"
 )
@@ -19,8 +21,10 @@ func NewBookCLI(s *service.BookService) *BookCLI {
 }
 
 func (c *BookCLI) Run() {
+	fmt.Println("usage: books <command (simulate|search)> [args]")
+
 	if len(os.Args) < 2 {
-		fmt.Println("usage: go-books <command> [args]")
+		fmt.Println("usage: books <command> [args]")
 
 		return
 	}
@@ -30,9 +34,8 @@ func (c *BookCLI) Run() {
 	switch command {
 	case "search":
 		if len(os.Args) < 3 {
-			fmt.Println("usage: go-books search <query>")
+			fmt.Println("usage: books search <query>")
 			return
-
 		}
 
 		books, err := c.searchBookByName(os.Args[2])
@@ -47,6 +50,16 @@ func (c *BookCLI) Run() {
 		for _, book := range books {
 			fmt.Printf("ID: %d, Title: %s, Author: %s, Genre: %s\n\n", book.ID, book.Title, book.Author, book.Genre)
 		}
+
+	case "simulate":
+		if len(os.Args) < 3 {
+			fmt.Println("usage: books simulate <book_id> <book_id> <book_id>...")
+			return
+		}
+
+		bookIDs := os.Args[2:]
+
+		c.simulateReading(bookIDs)
 	}
 }
 
@@ -62,4 +75,26 @@ func (c *BookCLI) searchBookByName(name string) ([]service.Book, error) {
 	}
 
 	return books, nil
+}
+
+func (c *BookCLI) simulateReading(ids []string) {
+	var bookIDs []int
+
+	for _, idStr := range ids {
+		id, err := strconv.Atoi(idStr)
+
+		if err != nil {
+			fmt.Println("Invalid book id: ", idStr)
+
+			continue
+		}
+
+		bookIDs = append(bookIDs, id)
+	}
+
+	responses := c.service.SimulateMultipleReadings(bookIDs, 2*time.Second)
+
+	for _, response := range responses {
+		fmt.Println(response)
+	}
 }
