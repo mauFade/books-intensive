@@ -6,14 +6,14 @@ import (
 	"net/http"
 	"os"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/mauFade/books-intensive/internal/cli"
 	"github.com/mauFade/books-intensive/internal/service"
 	"github.com/mauFade/books-intensive/internal/web"
 )
 
 func main() {
-	db, err := sql.Open("sqlite3", "./books.db")
+	db, err := sql.Open("mysql", "books:books@tcp(host:3306)/books")
 
 	if err != nil {
 		panic((err))
